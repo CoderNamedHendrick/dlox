@@ -24,8 +24,12 @@ class Parser {
     return statements as List<Stmt>;
   }
 
-  Expr parseExpression() {
-    return _expression();
+  Expr? parseExpression() {
+    try {
+      return _expression();
+    } on ParseError {
+      return null;
+    }
   }
 
   Expr _expression() {

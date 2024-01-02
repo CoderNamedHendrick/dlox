@@ -66,6 +66,8 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
               return left > right.length;
             case (String left, double right):
               return left.length > right;
+            case (String left, String right):
+              return left.length > right.length;
           }
 
           _checkNumberOperands(expr.operator, left, right);
@@ -77,6 +79,8 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
               return left >= right.length;
             case (String left, double right):
               return left.length >= right;
+            case (String left, String right):
+              return left.length >= right.length;
           }
 
           _checkNumberOperands(expr.operator, left, right);
@@ -88,6 +92,8 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
               return left < right.length;
             case (String left, double right):
               return left.length < right;
+            case (String left, String right):
+              return left.length < right.length;
           }
 
           _checkNumberOperands(expr.operator, left, right);
@@ -99,6 +105,8 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
               return left <= right.length;
             case (String left, double right):
               return left.length <= right;
+            case (String left, String right):
+              return left.length <= right.length;
           }
 
           _checkNumberOperands(expr.operator, left, right);
