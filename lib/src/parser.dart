@@ -24,6 +24,10 @@ class Parser {
     return statements as List<Stmt>;
   }
 
+  Expr parseExpression() {
+    return _expression();
+  }
+
   Expr _expression() {
     return _assignment();
   }
@@ -35,6 +39,7 @@ class Parser {
       return _statement();
     } on ParseError catch (_) {
       _synchronize();
+      if (Lox.isReplRun) rethrow;
       return null;
     }
   }
@@ -218,7 +223,7 @@ class Parser {
   }
 
   ParseError _error(Token token, String message) {
-    Lox.error(token, message);
+    if (!Lox.isReplRun) Lox.error(token, message);
     return ParseError();
   }
 

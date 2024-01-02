@@ -6,11 +6,26 @@ import 'package:tool/tool.dart';
 final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   Environment _environment = Environment();
 
-  void interpret(List<Stmt> statements) {
+  void interpret({List<Stmt> statements = const [], Expr? expr}) {
+    if (expr != null) return _interpretExpr(expr);
+
+    return _interpretStmts(statements);
+  }
+
+  void _interpretStmts(List<Stmt> statements) {
     try {
       for (final statement in statements) {
         _execute(statement);
       }
+    } on RuntimeError catch (e) {
+      Lox.runtimeError(e);
+    }
+  }
+
+  void _interpretExpr(Expr expression) {
+    try {
+      dynamic value = _evaluate(expression);
+      print(_stringify(value));
     } on RuntimeError catch (e) {
       Lox.runtimeError(e);
     }

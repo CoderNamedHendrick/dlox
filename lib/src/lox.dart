@@ -9,6 +9,7 @@ import 'parser.dart';
 final class Lox {
   static bool _hadError = false;
   static bool _hadRuntimeError = false;
+  static bool isReplRun = false;
 
   static final _interpreter = Interpreter();
 
@@ -44,6 +45,7 @@ final class Lox {
   }
 
   static void _runPrompt() {
+    isReplRun = true;
     try {
       for (;;) {
         print('> ');
@@ -60,13 +62,36 @@ final class Lox {
   static void _run(String source) {
     Scanner scanner = Scanner(source);
     List<Token> tokens = scanner.scanTokens();
+    if (isReplRun) {
+      try {
+        Parser parser = Parser(tokens);
+        final statements = parser.parse();
+
+        // Stop if there was a syntax error
+        if (_hadError) return;
+
+        _interpreter.interpret(statements: statements);
+      } on ParseError catch (_) {
+        Parser parser = Parser(tokens);
+        final expr = parser.parseExpression();
+
+        // Stop if there was a syntax error
+        if (_hadError) return;
+
+        _interpreter.interpret(expr: expr);
+      } catch (e) {
+        rethrow;
+      }
+      return;
+    }
+
     Parser parser = Parser(tokens);
     final statements = parser.parse();
 
     // Stop if there was a syntax error
     if (_hadError) return;
 
-    _interpreter.interpret(statements);
+    _interpreter.interpret(statements: statements);
   }
 
   static void runtimeError(RuntimeError error) {
