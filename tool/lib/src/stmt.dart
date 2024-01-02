@@ -3,8 +3,10 @@ import 'src.dart';
 abstract interface class StmtVisitor<R> {
     R visitBlockStmt (Block stmt);
     R visitExpressionStmt (Expression stmt);
+    R visitIfStmt (If stmt);
     R visitPrintStmt (Print stmt);
     R visitVarStmt (Var stmt);
+    R visitWhileStmt (While stmt);
 }
 
 sealed class Stmt {
@@ -39,6 +41,23 @@ final class Expression extends Stmt {
     }
 }
 
+final class If extends Stmt {
+    final Expr condition;
+    final Stmt thenBranch;
+    final Stmt? elseBranch;
+
+    const If({
+        required this.condition,
+        required this.thenBranch,
+        required this.elseBranch,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitIfStmt(this);
+    }
+}
+
 final class Print extends Stmt {
     final Expr expression;
 
@@ -64,6 +83,21 @@ final class Var extends Stmt {
     @override
     R accept<R>(StmtVisitor<R> visitor) {
         return visitor.visitVarStmt(this);
+    }
+}
+
+final class While extends Stmt {
+    final Expr condition;
+    final Stmt body;
+
+    const While({
+        required this.condition,
+        required this.body,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitWhileStmt(this);
     }
 }
 

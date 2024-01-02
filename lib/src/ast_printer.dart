@@ -167,6 +167,24 @@ final class VisitorAstPrinter
 
     return buffer.toString();
   }
+
+  @override
+  String visitIfStmt(If stmt) {
+    // TODO: implement visitIfStmt
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitLogicalExpr(Logical expr) {
+    // TODO: implement visitLogicalExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitWhileStmt(While stmt) {
+    // TODO: implement visitWhileStmt
+    throw UnimplementedError();
+  }
 }
 
 final class ReversePolishNotationAstPrinter
@@ -256,6 +274,24 @@ final class ReversePolishNotationAstPrinter
   String visitAssignExpr(Assign expr) {
     return _display(expr.name.lexeme, [expr.value]);
   }
+
+  @override
+  String visitIfStmt(If stmt) {
+    // TODO: implement visitIfStmt
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitLogicalExpr(Logical expr) {
+    // TODO: implement visitLogicalExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitWhileStmt(While stmt) {
+    // TODO: implement visitWhileStmt
+    throw UnimplementedError();
+  }
 }
 
 final class FunctionalAstPrinter {
@@ -280,6 +316,8 @@ final class FunctionalAstPrinter {
         _parenthesize(operator.lexeme, [left, right]),
       Literal(:final value) => value == null ? 'nil' : value.toString(),
       Grouping(:final expression) => _parenthesize('group', [expression]),
+      Logical(:final left, :final operator, :final right) =>
+        throw UnimplementedError(),
       Unary(:final operator, :final right) =>
         _parenthesize(operator.lexeme, [right]),
       Variable() => _parenthesize('var', [expr]),
@@ -300,6 +338,9 @@ final class FunctionalAstPrinter {
         }(),
       Expression(:final expression) => _printExpr(expression),
       Print(:final expression) => _parenthesize('-->', [expression]),
+      If(:final condition, :final thenBranch, :final elseBranch) =>
+        throw UnimplementedError(),
+      While(:final condition, :final body) => throw UnimplementedError(),
       Var(:final name, :final initializer) => _parenthesize(
           '${name.lexeme} -->',
           [initializer ?? Literal(value: null)],

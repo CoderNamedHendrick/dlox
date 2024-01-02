@@ -45,10 +45,74 @@ class Parser {
   }
 
   Stmt _statement() {
+    if (_match([TokenType.FOR])) return _forStatement();
+    if (_match([TokenType.IF])) return _ifStatement();
     if (_match([TokenType.PRINT])) return _printStatement();
+    if (_match([TokenType.WHILE])) return _whileStatement();
     if (_match([TokenType.LEFT_BRACE])) return Block(statements: _block());
 
     return _expressionStatement();
+  }
+
+  Stmt _forStatement() {
+    _consume(TokenType.LEFT_PAREN, 'Expect \'(\' after \'for\'.');
+
+    Stmt? initializer;
+    if (_match([TokenType.SEMICOLON])) {
+      initializer = null;
+    } else if (_match([TokenType.VAR])) {
+      initializer = _varDeclaration();
+    } else {
+      initializer = _expressionStatement();
+    }
+
+    Expr? condition;
+    if (!_check(TokenType.SEMICOLON)) {
+      condition = _expression();
+    }
+    _consume(TokenType.SEMICOLON, 'Expect \';\' after for loop condition.');
+
+    Expr? increment;
+    if (!_check(TokenType.RIGHT_PAREN)) {
+      increment = _expression();
+    }
+    _consume(TokenType.RIGHT_PAREN, 'Expect \')\' after clauses.');
+
+    Stmt body = _statement();
+
+    if (increment != null) {
+      body = Block(statements: [
+        body,
+        Expression(expression: increment),
+      ]);
+    }
+
+    condition ??= Literal(value: true);
+    body = While(condition: condition, body: body);
+
+    if (initializer != null) {
+      body = Block(statements: [initializer, body]);
+    }
+
+    return body;
+  }
+
+  Stmt _ifStatement() {
+    _consume(TokenType.LEFT_PAREN, 'Expect \'(\' after \'if\'.');
+    Expr condition = _expression();
+    _consume(TokenType.RIGHT_PAREN, 'Expect \')\' after if condition.');
+
+    Stmt thenBranch = _statement();
+    Stmt? elseBranch;
+    if (_match([TokenType.ELSE])) {
+      elseBranch = _statement();
+    }
+
+    return If(
+      condition: condition,
+      thenBranch: thenBranch,
+      elseBranch: elseBranch,
+    );
   }
 
   Stmt _printStatement() {
@@ -67,6 +131,15 @@ class Parser {
 
     _consume(TokenType.SEMICOLON, 'Expect \';\' after variable declaration.');
     return Var(name: name, initializer: initializer ?? Literal(value: null));
+  }
+
+  Stmt _whileStatement() {
+    _consume(TokenType.LEFT_PAREN, 'Expect \'(\' after \'while\'.');
+    final condition = _expression();
+    _consume(TokenType.RIGHT_PAREN, 'Expect \')\' after condition.');
+    final body = _statement();
+
+    return While(condition: condition, body: body);
   }
 
   Stmt _expressionStatement() {
@@ -92,7 +165,7 @@ class Parser {
   }
 
   Expr _assignment() {
-    Expr expr = _equality();
+    Expr expr = _or();
 
     if (_match([TokenType.EQUAL])) {
       Token equals = _previous;
@@ -104,6 +177,30 @@ class Parser {
       }
 
       _error(equals, 'Invalid assignment target.');
+    }
+
+    return expr;
+  }
+
+  Expr _or() {
+    Expr expr = _and();
+
+    while (_match([TokenType.OR])) {
+      final operator = _previous;
+      final right = _and();
+      expr = Logical(left: expr, operator: operator, right: right);
+    }
+
+    return expr;
+  }
+
+  Expr _and() {
+    Expr expr = _equality();
+
+    while (_match([TokenType.AND])) {
+      final operator = _previous;
+      final right = _equality();
+      expr = Logical(left: expr, operator: operator, right: right);
     }
 
     return expr;

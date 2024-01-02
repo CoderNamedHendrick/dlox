@@ -48,7 +48,7 @@ final class Lox {
     isReplRun = true;
     try {
       for (;;) {
-        print('> ');
+        stdout.write('> ');
         String? line = stdin.readLineSync();
         if (line == null) break;
         _run(line);

@@ -46,6 +46,13 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   @override
+  visitAssignExpr(Assign expr) {
+    dynamic value = _evaluate(expr.value);
+    _environment.assign(expr.name, value);
+    return value;
+  }
+
+  @override
   visitBinaryExpr(Binary expr) {
     dynamic left = _evaluate(expr.left);
     dynamic right = _evaluate(expr.right);
@@ -156,6 +163,19 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   @override
+  visitLogicalExpr(Logical expr) {
+    final left = _evaluate(expr.left);
+
+    if (expr.operator.type == TokenType.OR) {
+      if (_isTruthy(left)) return left;
+    } else {
+      if (!_isTruthy(left)) return left;
+    }
+
+    return _evaluate(expr.right);
+  }
+
+  @override
   visitUnaryExpr(Unary expr) {
     dynamic right = _evaluate(expr.right);
 
@@ -196,15 +216,24 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   @override
-  visitAssignExpr(Assign expr) {
-    dynamic value = _evaluate(expr.value);
-    _environment.assign(expr.name, value);
-    return value;
+  void visitBlockStmt(Block stmt) {
+    _executeBlock(stmt.statements, Environment(enclosing: _environment));
   }
 
   @override
-  void visitBlockStmt(Block stmt) {
-    _executeBlock(stmt.statements, Environment(enclosing: _environment));
+  void visitIfStmt(If stmt) {
+    if (_isTruthy(_evaluate(stmt.condition))) {
+      _execute(stmt.thenBranch);
+    } else if (stmt.elseBranch != null) {
+      _execute(stmt.elseBranch!);
+    }
+  }
+
+  @override
+  void visitWhileStmt(While stmt) {
+    while (_isTruthy(_evaluate(stmt.condition))) {
+      _execute(stmt.body);
+    }
   }
 
   _checkStringNumberLength(Token token, String string, double number) {
