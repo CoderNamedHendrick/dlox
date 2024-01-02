@@ -20,6 +20,7 @@ final class GenerateAst {
       ]);
 
       _defineAst(outputDir, baseName: 'Stmt', types: [
+        'Block      : List<Stmt> statements',
         'Expression : Expr expression',
         'Print      : Expr expression',
         'Var        : Token name, Expr? initializer'

@@ -41,6 +41,7 @@ class Parser {
 
   Stmt _statement() {
     if (_match([TokenType.PRINT])) return _printStatement();
+    if (_match([TokenType.LEFT_BRACE])) return Block(statements: _block());
 
     return _expressionStatement();
   }
@@ -67,6 +68,22 @@ class Parser {
     final expr = _expression();
     _consume(TokenType.SEMICOLON, 'Expect \';\' after value.');
     return Expression(expression: expr);
+  }
+
+  List<Stmt> _block() {
+    List<Stmt?> statements = [];
+
+    while (!_check(TokenType.RIGHT_BRACE) && !_isAtEnd) {
+      statements.add(_declaration());
+    }
+
+    _consume(TokenType.RIGHT_BRACE, 'Expect \'}\' after block.');
+    statements = statements
+        .where((element) => element != null)
+        .map((e) => e as Stmt)
+        .toList();
+
+    return statements as List<Stmt>;
   }
 
   Expr _assignment() {

@@ -1,8 +1,21 @@
-/* this is a lox multiline comment
-these lines should be consumed
-until we get to the closing tokens */
-1+1;
-//print "hello world"
-2+2;
--2;
-print -2+15;
+// testing variables scoping
+
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+    var a = "outer a";
+    var b = "outer b";
+    {
+        var a = "inner a";
+        print a;
+        print b;
+        print c;
+    }
+    print a;
+    print b;
+    print c;
+}
+print a;
+print b;
+print c;

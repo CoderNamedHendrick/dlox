@@ -1,6 +1,7 @@
 import 'src.dart';
 
 abstract interface class StmtVisitor<R> {
+    R visitBlockStmt (Block stmt);
     R visitExpressionStmt (Expression stmt);
     R visitPrintStmt (Print stmt);
     R visitVarStmt (Var stmt);
@@ -10,6 +11,19 @@ sealed class Stmt {
     const Stmt();
 
     R accept<R>(StmtVisitor<R> visitor);
+}
+
+final class Block extends Stmt {
+    final List<Stmt> statements;
+
+    const Block({
+        required this.statements,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitBlockStmt(this);
+    }
 }
 
 final class Expression extends Stmt {

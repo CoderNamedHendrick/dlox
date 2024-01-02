@@ -4,7 +4,7 @@ import 'package:dlox/src/errors.dart';
 import 'package:tool/tool.dart';
 
 final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
-  final Environment _environment = Environment();
+  Environment _environment = Environment();
 
   void interpret(List<Stmt> statements) {
     try {
@@ -154,6 +154,44 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
     };
   }
 
+  @override
+  void visitExpressionStmt(Expression stmt) {
+    _evaluate(stmt.expression);
+  }
+
+  @override
+  void visitPrintStmt(Print stmt) {
+    final value = _evaluate(stmt.expression);
+    print(_stringify(value));
+  }
+
+  @override
+  void visitVarStmt(Var stmt) {
+    dynamic value;
+    if (stmt.initializer != null) {
+      value = _evaluate(stmt.initializer!);
+    }
+
+    _environment.define(stmt.name.lexeme, value);
+  }
+
+  @override
+  visitVariableExpr(Variable expr) {
+    return _environment.get(expr.name);
+  }
+
+  @override
+  visitAssignExpr(Assign expr) {
+    dynamic value = _evaluate(expr.value);
+    _environment.assign(expr.name, value);
+    return value;
+  }
+
+  @override
+  void visitBlockStmt(Block stmt) {
+    _executeBlock(stmt.statements, Environment(enclosing: _environment));
+  }
+
   _checkStringNumberLength(Token token, String string, double number) {
     if (string.length >= number) return;
     throw RuntimeError(token, 'Operand value must be not exceed string length');
@@ -190,36 +228,16 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
     stmt.accept(this);
   }
 
-  @override
-  void visitExpressionStmt(Expression stmt) {
-    _evaluate(stmt.expression);
-  }
+  void _executeBlock(List<Stmt> statements, Environment environment) {
+    final previous = _environment;
+    try {
+      _environment = environment;
 
-  @override
-  void visitPrintStmt(Print stmt) {
-    final value = _evaluate(stmt.expression);
-    print(_stringify(value));
-  }
-
-  @override
-  void visitVarStmt(Var stmt) {
-    dynamic value;
-    if (stmt.initializer != null) {
-      value = _evaluate(stmt.initializer!);
+      for (final statement in statements) {
+        _execute(statement);
+      }
+    } finally {
+      _environment = previous;
     }
-
-    _environment.define(stmt.name.lexeme, value);
-  }
-
-  @override
-  visitVariableExpr(Variable expr) {
-    return _environment.get(expr.name);
-  }
-
-  @override
-  visitAssignExpr(Assign expr) {
-    dynamic value = _evaluate(expr.value);
-    _environment.assign(expr.name, value);
-    return value;
   }
 }

@@ -2,41 +2,96 @@ import 'package:dlox/dlox.dart';
 import 'package:tool/tool.dart';
 
 void main() {
-  Expr expression = Binary(
-    left: Unary(
-        operator:
-            Token(type: TokenType.MINUS, lexeme: '-', literal: null, line: 1),
-        right: Literal(value: 123)),
-    operator: Token(type: TokenType.STAR, lexeme: '*', literal: null, line: 1),
-    right: Grouping(expression: Literal(value: 45.67)),
-  );
-
-  Expr expression2 = Binary(
-    left: Grouping(
+  List<Stmt> statement = [
+    Print(expression: Literal(value: 'Hello world')),
+    Var(
+        name: Token(
+            type: TokenType.IDENTIFIER, lexeme: 'd', literal: null, line: 1),
+        initializer: Literal(value: 8)),
+    Var(
+        name: Token(
+            type: TokenType.IDENTIFIER, lexeme: 'c', literal: null, line: 1),
+        initializer: null),
+    Block(statements: [
+      Var(
+        name: Token(
+            type: TokenType.IDENTIFIER, lexeme: 'a', literal: null, line: 1),
+        initializer: Literal(value: 2),
+      ),
+      Print(
         expression: Binary(
-            left: Literal(value: 1),
+          left: Literal(value: 5),
+          operator:
+              Token(type: TokenType.PLUS, lexeme: '+', literal: null, line: 1),
+          right: Literal(value: 8),
+        ),
+      )
+    ]),
+    Block(statements: [
+      Var(
+        name: Token(
+            type: TokenType.IDENTIFIER, lexeme: 'a', literal: null, line: 1),
+        initializer: Literal(value: 2),
+      ),
+      Print(
+        expression: Binary(
+          left: Literal(value: 5),
+          operator:
+              Token(type: TokenType.PLUS, lexeme: '+', literal: null, line: 1),
+          right: Literal(value: 8),
+        ),
+      ),
+      Block(statements: [
+        Var(
+          name: Token(
+              type: TokenType.IDENTIFIER, lexeme: 'a', literal: null, line: 1),
+          initializer: Literal(value: 2),
+        ),
+        Print(
+          expression: Binary(
+            left: Literal(value: 5),
             operator: Token(
                 type: TokenType.PLUS, lexeme: '+', literal: null, line: 1),
-            right: Literal(value: 2))),
-    operator: Token(type: TokenType.STAR, lexeme: '*', literal: null, line: 1),
-    right: Grouping(
-        expression: Binary(
-            left: Literal(value: 4),
+            right: Literal(value: 8),
+          ),
+        )
+      ]),
+      Block(statements: [
+        Var(
+          name: Token(
+              type: TokenType.IDENTIFIER, lexeme: 'a', literal: null, line: 1),
+          initializer: Literal(value: 2),
+        ),
+        Print(
+          expression: Binary(
+            left: Literal(value: 5),
             operator: Token(
-                type: TokenType.MINUS, lexeme: '-', literal: null, line: 1),
-            right: Literal(value: 3))),
-  );
+                type: TokenType.PLUS, lexeme: '+', literal: null, line: 1),
+            right: Literal(value: 8),
+          ),
+        )
+      ])
+    ])
+  ];
 
-  print(VisitorAstPrinter()
-      .print(expression)); // prints (* (- 123) (group 45.67))
-  print(FunctionalAstPrinter().print(expression));
-  print(ReversePolishNotationAstPrinter()
-      .print(expression2)); // prints 1 2 + 4 3 - *
+  print(VisitorAstPrinter().printStatements(statement));
+  print(ReversePolishNotationAstPrinter().printStatements(statement));
+  print(FunctionalAstPrinter().printStatements(statement));
 }
 
-final class VisitorAstPrinter implements ExprVisitor<String> {
+final class VisitorAstPrinter
+    implements ExprVisitor<String>, StmtVisitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
+  }
+
+  String printStatements(List<Stmt> stmts) {
+    StringBuffer buffer = StringBuffer();
+    for (final statement in stmts) {
+      buffer.write(statement.accept(this));
+      buffer.writeln();
+    }
+    return buffer.toString();
   }
 
   @override
@@ -65,6 +120,41 @@ final class VisitorAstPrinter implements ExprVisitor<String> {
     return _parenthesize('var', [expr]);
   }
 
+  @override
+  String visitAssignExpr(Assign expr) {
+    return _parenthesize(expr.name.lexeme, [expr.value]);
+  }
+
+  @override
+  String visitBlockStmt(Block stmt) {
+    StringBuffer buffer = StringBuffer();
+    buffer.write('|--SOB  ');
+    for (final statement in stmt.statements) {
+      buffer.write(statement.accept(this));
+    }
+
+    buffer.write('  EOB--|  ');
+    return buffer.toString();
+  }
+
+  @override
+  String visitExpressionStmt(Expression stmt) {
+    return stmt.expression.accept(this);
+  }
+
+  @override
+  String visitPrintStmt(Print stmt) {
+    return _parenthesize('-->', [stmt.expression]);
+  }
+
+  @override
+  String visitVarStmt(Var stmt) {
+    return _parenthesize(
+      '${stmt.name.lexeme} --> ',
+      [stmt.initializer ?? Literal(value: null)],
+    );
+  }
+
   String _parenthesize(String name, List<Expr> exprs) {
     StringBuffer buffer = StringBuffer();
 
@@ -77,16 +167,21 @@ final class VisitorAstPrinter implements ExprVisitor<String> {
 
     return buffer.toString();
   }
-
-  @override
-  String visitAssignExpr(Assign expr) {
-    return _parenthesize(expr.name.lexeme, [expr.value]);
-  }
 }
 
-final class ReversePolishNotationAstPrinter implements ExprVisitor<String> {
+final class ReversePolishNotationAstPrinter
+    implements ExprVisitor<String>, StmtVisitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
+  }
+
+  String printStatements(List<Stmt> stmts) {
+    StringBuffer buffer = StringBuffer();
+    for (final statement in stmts) {
+      buffer.write(statement.accept(this));
+      buffer.writeln();
+    }
+    return buffer.toString();
   }
 
   @override
@@ -115,6 +210,36 @@ final class ReversePolishNotationAstPrinter implements ExprVisitor<String> {
     return _display('', [expr]);
   }
 
+  @override
+  String visitBlockStmt(Block stmt) {
+    StringBuffer buffer = StringBuffer();
+    buffer.write('|--SOB  ');
+    for (final statement in stmt.statements) {
+      buffer.write(statement.accept(this));
+    }
+
+    buffer.write('  EOB--|  ');
+    return buffer.toString();
+  }
+
+  @override
+  String visitExpressionStmt(Expression stmt) {
+    return stmt.expression.accept(this);
+  }
+
+  @override
+  String visitPrintStmt(Print stmt) {
+    return _display('-->', [stmt.expression]);
+  }
+
+  @override
+  String visitVarStmt(Var stmt) {
+    return _display(
+      '${stmt.name.lexeme} --> ',
+      [stmt.initializer ?? Literal(value: null)],
+    );
+  }
+
   String _display(String name, List<Expr> exprs) {
     StringBuffer buffer = StringBuffer();
 
@@ -138,6 +263,15 @@ final class FunctionalAstPrinter {
     return _printExpr(expr);
   }
 
+  String printStatements(List<Stmt> stmts) {
+    StringBuffer buffer = StringBuffer();
+    for (final statement in stmts) {
+      buffer.write(_printStmt(statement));
+      buffer.writeln();
+    }
+    return buffer.toString();
+  }
+
   // print true via pattern matching
   String _printExpr(Expr expr) {
     return switch (expr) {
@@ -149,6 +283,27 @@ final class FunctionalAstPrinter {
       Unary(:final operator, :final right) =>
         _parenthesize(operator.lexeme, [right]),
       Variable() => _parenthesize('var', [expr]),
+    };
+  }
+
+  String _printStmt(Stmt stmt) {
+    return switch (stmt) {
+      Block(:final statements) => () {
+          StringBuffer buffer = StringBuffer();
+          buffer.write('|--SOB  ');
+          for (final statement in statements) {
+            buffer.write(_printStmt(statement));
+          }
+
+          buffer.write('  EOB--|  ');
+          return buffer.toString();
+        }(),
+      Expression(:final expression) => _printExpr(expression),
+      Print(:final expression) => _parenthesize('-->', [expression]),
+      Var(:final name, :final initializer) => _parenthesize(
+          '${name.lexeme} -->',
+          [initializer ?? Literal(value: null)],
+        ),
     };
   }
 
