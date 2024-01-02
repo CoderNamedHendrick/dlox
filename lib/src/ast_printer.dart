@@ -34,7 +34,7 @@ void main() {
       .print(expression2)); // prints 1 2 + 4 3 - *
 }
 
-final class VisitorAstPrinter implements Visitor<String> {
+final class VisitorAstPrinter implements ExprVisitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
   }
@@ -74,7 +74,7 @@ final class VisitorAstPrinter implements Visitor<String> {
   }
 }
 
-final class ReversePolishNotationAstPrinter implements Visitor<String> {
+final class ReversePolishNotationAstPrinter implements ExprVisitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
   }

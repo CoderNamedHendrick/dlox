@@ -10,16 +10,39 @@ class Parser {
 
   Parser(List<Token> tokens) : _tokens = tokens;
 
-  Expr? parse() {
+  List<Stmt> parse() {
     try {
-      return _expression();
+      final statements = <Stmt>[];
+      while (!_isAtEnd) {
+        statements.add(_statement());
+      }
+
+      return statements;
     } on ParseError catch (_) {
-      return null;
+      return [];
     }
   }
 
   Expr _expression() {
     return _equality();
+  }
+
+  Stmt _statement() {
+    if (_match([TokenType.PRINT])) return _printStatement();
+
+    return _expressionStatement();
+  }
+
+  Stmt _printStatement() {
+    final value = _expression();
+    _consume(TokenType.SEMICOLON, 'Expect \';\' after value.');
+    return Print(expression: value);
+  }
+
+  Stmt _expressionStatement() {
+    final expr = _expression();
+    _consume(TokenType.SEMICOLON, 'Expect \';\' after value.');
+    return Expression(expression: expr);
   }
 
   Expr _equality() {

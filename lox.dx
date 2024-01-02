@@ -3,5 +3,6 @@ these lines should be consumed
 until we get to the closing tokens */
 1+1;
 //print "hello world"
-2+2
--2
+2+2;
+-2;
+print -2+15;

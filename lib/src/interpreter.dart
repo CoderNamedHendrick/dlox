@@ -2,11 +2,12 @@ import 'package:dlox/dlox.dart';
 import 'package:dlox/src/errors.dart';
 import 'package:tool/tool.dart';
 
-final class Interpreter implements Visitor<dynamic> {
-  void interpret(Expr expression) {
+final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
+  void interpret(List<Stmt> statements) {
     try {
-      dynamic value = _evaluate(expression);
-      print(_stringify(value));
+      for (final statement in statements) {
+        _execute(statement);
+      }
     } on RuntimeError catch (e) {
       Lox.runtimeError(e);
     }
@@ -180,5 +181,20 @@ final class Interpreter implements Visitor<dynamic> {
 
   dynamic _evaluate(Expr expr) {
     return expr.accept(this);
+  }
+
+  void _execute(Stmt stmt) {
+    stmt.accept(this);
+  }
+
+  @override
+  void visitExpressionStmt(Expression stmt) {
+    _evaluate(stmt.expression);
+  }
+
+  @override
+  void visitPrintStmt(Print stmt) {
+    final value = _evaluate(stmt.expression);
+    print(_stringify(value));
   }
 }

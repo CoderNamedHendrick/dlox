@@ -16,6 +16,12 @@ final class GenerateAst {
         'Literal   :    dynamic value',
         'Unary     :    Token operator, Expr right'
       ]);
+
+      _defineAst(
+        outputDir,
+        baseName: 'Stmt',
+        types: ['Expression : Expr expression', 'Print : Expr expression'],
+      );
     } catch (_) {
       rethrow;
     }
@@ -27,8 +33,8 @@ final class GenerateAst {
       String path = '$outputDir/${baseName.toLowerCase()}.dart';
       var writer = File(path).openWrite();
 
-      // import dlox package
-      writer.writeln('import \'package:dlox/dlox.dart\';');
+      // import src to provide common imports
+      writer.writeln('import \'src.dart\';');
       writer.writeln();
 
       // define visitor
@@ -38,7 +44,7 @@ final class GenerateAst {
       writer.writeln('sealed class $baseName {');
       writer.writeln('${_tab}const $baseName();');
       writer.writeln();
-      writer.writeln('${_tab}R accept<R>(Visitor<R> visitor);');
+      writer.writeln('${_tab}R accept<R>(${baseName}Visitor<R> visitor);');
       writer.writeln('}');
       writer.writeln(); // newline
 
@@ -58,7 +64,7 @@ final class GenerateAst {
 
   static void _defineVisitor(
       IOSink writer, String baseName, List<String> types) {
-    writer.writeln('abstract interface class Visitor<R> {');
+    writer.writeln('abstract interface class ${baseName}Visitor<R> {');
     for (final type in types) {
       final typeName = type.split(':')[0].trim();
       writer.writeln(
@@ -88,7 +94,7 @@ final class GenerateAst {
 
     // Visitor pattern
     writer.writeln('$_tab@override');
-    writer.writeln('${_tab}R accept<R>(Visitor<R> visitor) {');
+    writer.writeln('${_tab}R accept<R>(${baseName}Visitor<R> visitor) {');
     writer
         .writeln('$_tab${_tab}return visitor.visit$className$baseName(this);');
     writer.writeln('$_tab}');

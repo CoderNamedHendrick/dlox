@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dlox/dlox.dart';
 import 'package:dlox/src/errors.dart';
 import 'package:dlox/src/interpreter.dart';
-import 'package:tool/tool.dart';
 
 import 'parser.dart';
 
@@ -62,12 +61,12 @@ final class Lox {
     Scanner scanner = Scanner(source);
     List<Token> tokens = scanner.scanTokens();
     Parser parser = Parser(tokens);
-    final expression = parser.parse();
+    final statements = parser.parse();
 
-    // Stop if there is a syntax error
+    // Stop if there was a syntax error
     if (_hadError) return;
 
-    _interpreter.interpret(expression ?? Literal(value: null));
+    _interpreter.interpret(statements);
   }
 
   static void runtimeError(RuntimeError error) {
