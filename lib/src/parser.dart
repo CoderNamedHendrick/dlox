@@ -11,20 +11,32 @@ class Parser {
   Parser(List<Token> tokens) : _tokens = tokens;
 
   List<Stmt> parse() {
-    try {
-      final statements = <Stmt>[];
-      while (!_isAtEnd) {
-        statements.add(_statement());
-      }
-
-      return statements;
-    } on ParseError catch (_) {
-      return [];
+    List<Stmt?> statements = <Stmt?>[];
+    while (!_isAtEnd) {
+      statements.add(_declaration());
     }
+
+    statements = statements
+        .where((element) => element != null)
+        .map((e) => e as Stmt)
+        .toList();
+
+    return statements as List<Stmt>;
   }
 
   Expr _expression() {
-    return _equality();
+    return _assignment();
+  }
+
+  Stmt? _declaration() {
+    try {
+      if (_match([TokenType.VAR])) return _varDeclaration();
+
+      return _statement();
+    } on ParseError catch (_) {
+      _synchronize();
+      return null;
+    }
   }
 
   Stmt _statement() {
@@ -39,10 +51,40 @@ class Parser {
     return Print(expression: value);
   }
 
+  Stmt _varDeclaration() {
+    Token name = _consume(TokenType.IDENTIFIER, 'Expect variable name.');
+
+    Expr? initializer;
+    if (_match([TokenType.EQUAL])) {
+      initializer = _expression();
+    }
+
+    _consume(TokenType.SEMICOLON, 'Expect \';\' after variable declaration.');
+    return Var(name: name, initializer: initializer ?? Literal(value: null));
+  }
+
   Stmt _expressionStatement() {
     final expr = _expression();
     _consume(TokenType.SEMICOLON, 'Expect \';\' after value.');
     return Expression(expression: expr);
+  }
+
+  Expr _assignment() {
+    Expr expr = _equality();
+
+    if (_match([TokenType.EQUAL])) {
+      Token equals = _previous;
+      Expr value = _assignment();
+
+      if (expr is Variable) {
+        Token name = expr.name;
+        return Assign(name: name, value: value);
+      }
+
+      _error(equals, 'Invalid assignment target.');
+    }
+
+    return expr;
   }
 
   Expr _equality() {
@@ -115,6 +157,10 @@ class Parser {
 
     if (_match([TokenType.NUMBER, TokenType.STRING])) {
       return Literal(value: _previous.literal);
+    }
+
+    if (_match([TokenType.IDENTIFIER])) {
+      return Variable(name: _previous);
     }
 
     if (_match([TokenType.LEFT_PAREN])) {

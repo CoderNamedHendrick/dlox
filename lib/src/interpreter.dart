@@ -1,8 +1,11 @@
 import 'package:dlox/dlox.dart';
+import 'package:dlox/src/environment.dart';
 import 'package:dlox/src/errors.dart';
 import 'package:tool/tool.dart';
 
 final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
+  final Environment _environment = Environment();
+
   void interpret(List<Stmt> statements) {
     try {
       for (final statement in statements) {
@@ -196,5 +199,27 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   void visitPrintStmt(Print stmt) {
     final value = _evaluate(stmt.expression);
     print(_stringify(value));
+  }
+
+  @override
+  void visitVarStmt(Var stmt) {
+    dynamic value;
+    if (stmt.initializer != null) {
+      value = _evaluate(stmt.initializer!);
+    }
+
+    _environment.define(stmt.name.lexeme, value);
+  }
+
+  @override
+  visitVariableExpr(Variable expr) {
+    return _environment.get(expr.name);
+  }
+
+  @override
+  visitAssignExpr(Assign expr) {
+    dynamic value = _evaluate(expr.value);
+    _environment.assign(expr.name, value);
+    return value;
   }
 }

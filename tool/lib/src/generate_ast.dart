@@ -11,17 +11,19 @@ final class GenerateAst {
       }
       String outputDir = args[0];
       _defineAst(outputDir, baseName: 'Expr', types: [
+        'Assign    :    Token name, Expr value',
         'Binary    :    Expr left, Token operator, Expr right',
         'Grouping  :    Expr expression',
         'Literal   :    dynamic value',
-        'Unary     :    Token operator, Expr right'
+        'Unary     :    Token operator, Expr right',
+        'Variable  :    Token name'
       ]);
 
-      _defineAst(
-        outputDir,
-        baseName: 'Stmt',
-        types: ['Expression : Expr expression', 'Print : Expr expression'],
-      );
+      _defineAst(outputDir, baseName: 'Stmt', types: [
+        'Expression : Expr expression',
+        'Print      : Expr expression',
+        'Var        : Token name, Expr? initializer'
+      ]);
     } catch (_) {
       rethrow;
     }

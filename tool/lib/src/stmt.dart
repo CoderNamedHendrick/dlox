@@ -3,6 +3,7 @@ import 'src.dart';
 abstract interface class StmtVisitor<R> {
     R visitExpressionStmt (Expression stmt);
     R visitPrintStmt (Print stmt);
+    R visitVarStmt (Var stmt);
 }
 
 sealed class Stmt {
@@ -34,6 +35,21 @@ final class Print extends Stmt {
     @override
     R accept<R>(StmtVisitor<R> visitor) {
         return visitor.visitPrintStmt(this);
+    }
+}
+
+final class Var extends Stmt {
+    final Token name;
+    final Expr? initializer;
+
+    const Var({
+        required this.name,
+        required this.initializer,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitVarStmt(this);
     }
 }
 

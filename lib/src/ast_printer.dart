@@ -60,6 +60,11 @@ final class VisitorAstPrinter implements ExprVisitor<String> {
     return _parenthesize(expr.operator.lexeme, [expr.right]);
   }
 
+  @override
+  String visitVariableExpr(Variable expr) {
+    return _parenthesize('var', [expr]);
+  }
+
   String _parenthesize(String name, List<Expr> exprs) {
     StringBuffer buffer = StringBuffer();
 
@@ -71,6 +76,11 @@ final class VisitorAstPrinter implements ExprVisitor<String> {
     buffer.write(')');
 
     return buffer.toString();
+  }
+
+  @override
+  String visitAssignExpr(Assign expr) {
+    return _parenthesize(expr.name.lexeme, [expr.value]);
   }
 }
 
@@ -100,6 +110,11 @@ final class ReversePolishNotationAstPrinter implements ExprVisitor<String> {
     return _display(expr.operator.lexeme, [expr.right]);
   }
 
+  @override
+  String visitVariableExpr(Variable expr) {
+    return _display('', [expr]);
+  }
+
   String _display(String name, List<Expr> exprs) {
     StringBuffer buffer = StringBuffer();
 
@@ -111,6 +126,11 @@ final class ReversePolishNotationAstPrinter implements ExprVisitor<String> {
 
     return buffer.toString();
   }
+
+  @override
+  String visitAssignExpr(Assign expr) {
+    return _display(expr.name.lexeme, [expr.value]);
+  }
 }
 
 final class FunctionalAstPrinter {
@@ -121,12 +141,14 @@ final class FunctionalAstPrinter {
   // print true via pattern matching
   String _printExpr(Expr expr) {
     return switch (expr) {
+      Assign(:final name, :final value) => _parenthesize(name.lexeme, [value]),
       Binary(:final left, :final operator, :final right) =>
         _parenthesize(operator.lexeme, [left, right]),
       Literal(:final value) => value == null ? 'nil' : value.toString(),
       Grouping(:final expression) => _parenthesize('group', [expression]),
       Unary(:final operator, :final right) =>
         _parenthesize(operator.lexeme, [right]),
+      Variable() => _parenthesize('var', [expr]),
     };
   }
 

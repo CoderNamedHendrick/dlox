@@ -1,16 +1,33 @@
 import 'src.dart';
 
 abstract interface class ExprVisitor<R> {
+    R visitAssignExpr (Assign expr);
     R visitBinaryExpr (Binary expr);
     R visitGroupingExpr (Grouping expr);
     R visitLiteralExpr (Literal expr);
     R visitUnaryExpr (Unary expr);
+    R visitVariableExpr (Variable expr);
 }
 
 sealed class Expr {
     const Expr();
 
     R accept<R>(ExprVisitor<R> visitor);
+}
+
+final class Assign extends Expr {
+    final Token name;
+    final Expr value;
+
+    const Assign({
+        required this.name,
+        required this.value,
+    });
+
+    @override
+    R accept<R>(ExprVisitor<R> visitor) {
+        return visitor.visitAssignExpr(this);
+    }
 }
 
 final class Binary extends Expr {
@@ -68,6 +85,19 @@ final class Unary extends Expr {
     @override
     R accept<R>(ExprVisitor<R> visitor) {
         return visitor.visitUnaryExpr(this);
+    }
+}
+
+final class Variable extends Expr {
+    final Token name;
+
+    const Variable({
+        required this.name,
+    });
+
+    @override
+    R accept<R>(ExprVisitor<R> visitor) {
+        return visitor.visitVariableExpr(this);
     }
 }
 
