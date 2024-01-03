@@ -53,6 +53,7 @@ class Parser {
     if (_match([TokenType.IF])) return _ifStatement();
     if (_match([TokenType.PRINT])) return _printStatement();
     if (_match([TokenType.WHILE])) return _whileStatement();
+    if (_match([TokenType.BREAK])) return _breakStatement();
     if (_match([TokenType.LEFT_BRACE])) return Block(statements: _block());
 
     return _expressionStatement();
@@ -144,6 +145,11 @@ class Parser {
     final body = _statement();
 
     return While(condition: condition, body: body);
+  }
+
+  Stmt _breakStatement() {
+    _consume(TokenType.SEMICOLON, 'Expect \';\' after \'break\'.');
+    return Break(token: _previous);
   }
 
   Stmt _expressionStatement() {

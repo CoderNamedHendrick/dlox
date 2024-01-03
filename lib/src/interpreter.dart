@@ -3,6 +3,8 @@ import 'package:dlox/src/environment.dart';
 import 'package:dlox/src/errors.dart';
 import 'package:tool/tool.dart';
 
+class _BreakOutOfLoopException implements Exception {}
+
 final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   Environment _environment = Environment();
 
@@ -240,8 +242,22 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   @override
   void visitWhileStmt(While stmt) {
     while (_isTruthy(_evaluate(stmt.condition))) {
-      _execute(stmt.body);
+      try {
+        _execute(stmt.body);
+      } on _BreakOutOfLoopException {
+        break;
+      }
     }
+  }
+
+  @override
+  void visitBreakStmt(Break stmt) {
+    if (_environment.enclosing != null) {
+      throw _BreakOutOfLoopException();
+    }
+
+    throw RuntimeError(
+        stmt.token, 'Break statement cannot be used outside a loop.');
   }
 
   _checkStringNumberLength(Token token, String string, double number) {
@@ -280,6 +296,7 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
     stmt.accept(this);
   }
 
+  // var a = 10; while (a < 15) { if (a == 13) break; a = a + 1; print a; } print a;
   void _executeBlock(List<Stmt> statements, Environment environment) {
     final previous = _environment;
     try {

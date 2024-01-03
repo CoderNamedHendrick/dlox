@@ -185,6 +185,12 @@ final class VisitorAstPrinter
     // TODO: implement visitWhileStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitBreakStmt(Break stmt) {
+    // TODO: implement visitBreakStmt
+    throw UnimplementedError();
+  }
 }
 
 final class ReversePolishNotationAstPrinter
@@ -292,6 +298,12 @@ final class ReversePolishNotationAstPrinter
     // TODO: implement visitWhileStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitBreakStmt(Break stmt) {
+    // TODO: implement visitBreakStmt
+    throw UnimplementedError();
+  }
 }
 
 final class FunctionalAstPrinter {
@@ -341,6 +353,7 @@ final class FunctionalAstPrinter {
       If(:final condition, :final thenBranch, :final elseBranch) =>
         throw UnimplementedError(),
       While(:final condition, :final body) => throw UnimplementedError(),
+      Break(:final token) => throw UnimplementedError(),
       Var(:final name, :final initializer) => _parenthesize(
           '${name.lexeme} -->',
           [initializer ?? Literal(value: null)],

@@ -7,6 +7,7 @@ abstract interface class StmtVisitor<R> {
     R visitPrintStmt (Print stmt);
     R visitVarStmt (Var stmt);
     R visitWhileStmt (While stmt);
+    R visitBreakStmt (Break stmt);
 }
 
 sealed class Stmt {
@@ -98,6 +99,19 @@ final class While extends Stmt {
     @override
     R accept<R>(StmtVisitor<R> visitor) {
         return visitor.visitWhileStmt(this);
+    }
+}
+
+final class Break extends Stmt {
+    final Token token;
+
+    const Break({
+        required this.token,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitBreakStmt(this);
     }
 }
 

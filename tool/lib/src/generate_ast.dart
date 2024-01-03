@@ -27,6 +27,7 @@ final class GenerateAst {
         'Print      : Expr expression',
         'Var        : Token name, Expr? initializer',
         'While      : Expr condition, Stmt body',
+        'Break      : Token token',
       ]);
     } catch (_) {
       rethrow;
