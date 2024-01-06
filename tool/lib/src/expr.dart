@@ -3,6 +3,7 @@ import 'src.dart';
 abstract interface class ExprVisitor<R> {
     R visitAssignExpr (Assign expr);
     R visitBinaryExpr (Binary expr);
+    R visitCallExpr (Call expr);
     R visitGroupingExpr (Grouping expr);
     R visitLiteralExpr (Literal expr);
     R visitLogicalExpr (Logical expr);
@@ -45,6 +46,23 @@ final class Binary extends Expr {
     @override
     R accept<R>(ExprVisitor<R> visitor) {
         return visitor.visitBinaryExpr(this);
+    }
+}
+
+final class Call extends Expr {
+    final Expr callee;
+    final Token paren;
+    final List<Expr> arguments;
+
+    const Call({
+        required this.callee,
+        required this.paren,
+        required this.arguments,
+    });
+
+    @override
+    R accept<R>(ExprVisitor<R> visitor) {
+        return visitor.visitCallExpr(this);
     }
 }
 

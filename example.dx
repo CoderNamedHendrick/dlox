@@ -1,5 +1,11 @@
 // loops with break statement
 
+fun sayHi(first, last) {
+    print "Hi, " + first + " " + last + "!";
+}
+
+sayHi("Dear", "Reader");
+
 var a = 10;
 while (a < 100) {
     if (a == 50) break;
@@ -8,3 +14,15 @@ while (a < 100) {
 }
 
 print a;
+
+fun fib(n) {
+    if (n <= 1) return n;
+
+    return fib(n -2 ) + fib(n - 1);
+}
+
+for (var i = 0; i < 20; i = i + 1) {
+    print fib(i);
+}
+
+

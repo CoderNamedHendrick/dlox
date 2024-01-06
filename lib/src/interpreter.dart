@@ -1,12 +1,22 @@
 import 'package:dlox/dlox.dart';
 import 'package:dlox/src/environment.dart';
 import 'package:dlox/src/errors.dart';
+import 'package:dlox/src/lox_function.dart';
 import 'package:tool/tool.dart';
+
+import 'lox_callable.dart';
+import 'return.dart' as re;
 
 class _BreakOutOfLoopException implements Exception {}
 
 final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
-  Environment _environment = Environment();
+  final Environment globals = Environment();
+
+  late Environment _environment = globals;
+
+  Interpreter() {
+    globals.define('clock', _InterpreterCallable());
+  }
 
   void interpret({List<Stmt> statements = const [], Expr? expr}) {
     if (expr != null) return _interpretExpr(expr);
@@ -163,6 +173,27 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   @override
+  visitCallExpr(Call expr) {
+    dynamic callee = _evaluate(expr.callee);
+    List arguments = [];
+    for (Expr argument in expr.arguments) {
+      arguments.add(_evaluate(argument));
+    }
+
+    if (callee is! LoxCallable) {
+      throw RuntimeError(expr.paren, 'Can only call functions and classes.');
+    }
+
+    LoxCallable function = callee;
+    if (arguments.length != function.arity) {
+      throw RuntimeError(expr.paren,
+          'Expect ${function.arity} arguments but got ${arguments.length}.');
+    }
+
+    return function.call(this, arguments);
+  }
+
+  @override
   visitGroupingExpr(Grouping expr) {
     return _evaluate(expr.expression);
   }
@@ -205,9 +236,23 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   @override
+  void visitLFunctionStmt(LFunction stmt) {
+    LoxFunction function = LoxFunction(stmt);
+    _environment.define(stmt.name.lexeme, function);
+  }
+
+  @override
   void visitPrintStmt(Print stmt) {
     final value = _evaluate(stmt.expression);
     print(_stringify(value));
+  }
+
+  @override
+  void visitReturnStmt(Return stmt) {
+    dynamic value;
+    if (stmt.value != null) value = _evaluate(stmt.value!);
+
+    throw re.Return(value);
   }
 
   @override
@@ -227,7 +272,7 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
 
   @override
   void visitBlockStmt(Block stmt) {
-    _executeBlock(stmt.statements, Environment(enclosing: _environment));
+    executeBlock(stmt.statements, Environment(enclosing: _environment));
   }
 
   @override
@@ -297,7 +342,7 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   // var a = 10; while (a < 15) { if (a == 13) break; a = a + 1; print a; } print a;
-  void _executeBlock(List<Stmt> statements, Environment environment) {
+  void executeBlock(List<Stmt> statements, Environment environment) {
     final previous = _environment;
     try {
       _environment = environment;
@@ -309,4 +354,19 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
       _environment = previous;
     }
   }
+}
+
+final class _InterpreterCallable implements LoxCallable {
+  const _InterpreterCallable();
+
+  @override
+  int get arity => 0;
+
+  @override
+  call(Interpreter interpreter, List<dynamic> arguments) {
+    return (DateTime.now().millisecond / 1000).toDouble();
+  }
+
+  @override
+  String toString() => '<native fn>';
 }

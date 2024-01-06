@@ -38,6 +38,7 @@ class Parser {
 
   Stmt? _declaration() {
     try {
+      if (_match([TokenType.FUN])) return _function('function');
       if (_match([TokenType.VAR])) return _varDeclaration();
 
       return _statement();
@@ -52,6 +53,7 @@ class Parser {
     if (_match([TokenType.FOR])) return _forStatement();
     if (_match([TokenType.IF])) return _ifStatement();
     if (_match([TokenType.PRINT])) return _printStatement();
+    if (_match([TokenType.RETURN])) return _returnStatement();
     if (_match([TokenType.WHILE])) return _whileStatement();
     if (_match([TokenType.BREAK])) return _breakStatement();
     if (_match([TokenType.LEFT_BRACE])) return Block(statements: _block());
@@ -138,6 +140,17 @@ class Parser {
     return Var(name: name, initializer: initializer ?? Literal(value: null));
   }
 
+  Stmt _returnStatement() {
+    Token keyword = _previous;
+    Expr? value;
+    if (!_check(TokenType.SEMICOLON)) {
+      value = _expression();
+    }
+
+    _consume(TokenType.SEMICOLON, 'Expect \';\' after return value.');
+    return Return(keyword: keyword, value: value);
+  }
+
   Stmt _whileStatement() {
     _consume(TokenType.LEFT_PAREN, 'Expect \'(\' after \'while\'.');
     final condition = _expression();
@@ -148,7 +161,13 @@ class Parser {
   }
 
   Stmt _breakStatement() {
+    // check for a previous while token else throw error
+    if (!_checkPreviousForNearestWhile()) {
+      throw _error(_previous, 'Break statement cannot be used outside a loop');
+    }
+
     _consume(TokenType.SEMICOLON, 'Expect \';\' after \'break\'.');
+    // keep break token to communicate error location if it fails
     return Break(token: _previous);
   }
 
@@ -156,6 +175,29 @@ class Parser {
     final expr = _expression();
     _consume(TokenType.SEMICOLON, 'Expect \';\' after value.');
     return Expression(expression: expr);
+  }
+
+  Stmt _function(String kind) {
+    Token name = _consume(TokenType.IDENTIFIER, 'Expect $kind name.');
+    _consume(TokenType.LEFT_PAREN, 'Expect \'(\' after $kind name.');
+    List<Token> parameters = [];
+
+    if (!_check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (parameters.length >= 255) {
+          _error(_peek, 'Can\'t have more than 255 parameters.');
+        }
+
+        parameters
+            .add(_consume(TokenType.IDENTIFIER, 'Expect parameter name.'));
+      } while (_match([TokenType.COMMA]));
+    }
+    _consume(TokenType.RIGHT_PAREN, 'Expect \')\' after parameters.');
+
+    _consume(TokenType.LEFT_BRACE, 'Expect \'{\' before $kind body.');
+    List<Stmt> body = _block();
+
+    return LFunction(name: name, params: parameters, body: body);
   }
 
   List<Stmt> _block() {
@@ -276,7 +318,38 @@ class Parser {
       return Unary(operator: operator, right: right);
     }
 
-    return _primary();
+    return _call();
+  }
+
+  Expr _call() {
+    Expr expr = _primary();
+
+    while (true) {
+      if (_match([TokenType.LEFT_PAREN])) {
+        expr = _finishCall(expr);
+      } else {
+        break;
+      }
+    }
+
+    return expr;
+  }
+
+  Expr _finishCall(Expr callee) {
+    List<Expr> arguments = [];
+    if (!_check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (arguments.length >= 255) {
+          _error(_peek, 'Can\'t have more than 255 arguments.');
+        }
+        arguments.add(_expression());
+      } while (_match([TokenType.COMMA]));
+    }
+
+    Token paren =
+        _consume(TokenType.RIGHT_PAREN, 'Expect \')\' after arguments.');
+
+    return Call(callee: callee, paren: paren, arguments: arguments);
   }
 
   Expr _primary() {
@@ -361,6 +434,37 @@ class Parser {
   bool _check(TokenType type) {
     if (_isAtEnd) return false;
     return _peek.type == type;
+  }
+
+  bool _checkPreviousForNearestWhile() {
+    if (_isAtEnd) return false;
+    bool whileExists = false;
+    int whileLocation = 0;
+    for (int i = _current; i >= 0; i--) {
+      if (_tokens[i].type == TokenType.WHILE) {
+        whileLocation = i;
+      }
+
+      // tells us where the next block ends
+      if (_tokens[i].type == TokenType.RIGHT_BRACE) {
+        final previousBlockEnd = i;
+
+        // position of while comes after previous block ends
+        // which would imply the nearest while started the block with
+        // break statement
+        if (whileLocation > previousBlockEnd) {
+          whileExists = true;
+          return whileExists;
+        }
+      }
+
+      // gotten to the start of the file, while has the only block in file
+      if (i == 0 && whileLocation > 0) {
+        whileExists = true;
+      }
+    }
+
+    return whileExists;
   }
 
   Token _advance() {

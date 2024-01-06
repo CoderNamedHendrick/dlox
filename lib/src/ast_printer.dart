@@ -191,6 +191,18 @@ final class VisitorAstPrinter
     // TODO: implement visitBreakStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitCallExpr(Call expr) {
+    // TODO: implement visitCallExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitLFunctionStmt(LFunction stmt) {
+    // TODO: implement visitLFunctionStmt
+    throw UnimplementedError();
+  }
 }
 
 final class ReversePolishNotationAstPrinter
@@ -304,6 +316,18 @@ final class ReversePolishNotationAstPrinter
     // TODO: implement visitBreakStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitCallExpr(Call expr) {
+    // TODO: implement visitCallExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitLFunctionStmt(LFunction stmt) {
+    // TODO: implement visitLFunctionStmt
+    throw UnimplementedError();
+  }
 }
 
 final class FunctionalAstPrinter {
@@ -333,6 +357,8 @@ final class FunctionalAstPrinter {
       Unary(:final operator, :final right) =>
         _parenthesize(operator.lexeme, [right]),
       Variable() => _parenthesize('var', [expr]),
+      // TODO: Handle this case.
+      Call() => throw UnimplementedError(),
     };
   }
 
@@ -358,6 +384,8 @@ final class FunctionalAstPrinter {
           '${name.lexeme} -->',
           [initializer ?? Literal(value: null)],
         ),
+      // TODO: Handle this case.
+      LFunction() => throw UnimplementedError(),
     };
   }
 

@@ -3,8 +3,10 @@ import 'src.dart';
 abstract interface class StmtVisitor<R> {
     R visitBlockStmt (Block stmt);
     R visitExpressionStmt (Expression stmt);
+    R visitLFunctionStmt (LFunction stmt);
     R visitIfStmt (If stmt);
     R visitPrintStmt (Print stmt);
+    R visitReturnStmt (Return stmt);
     R visitVarStmt (Var stmt);
     R visitWhileStmt (While stmt);
     R visitBreakStmt (Break stmt);
@@ -42,6 +44,23 @@ final class Expression extends Stmt {
     }
 }
 
+final class LFunction extends Stmt {
+    final Token name;
+    final List<Token> params;
+    final List<Stmt> body;
+
+    const LFunction({
+        required this.name,
+        required this.params,
+        required this.body,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitLFunctionStmt(this);
+    }
+}
+
 final class If extends Stmt {
     final Expr condition;
     final Stmt thenBranch;
@@ -69,6 +88,21 @@ final class Print extends Stmt {
     @override
     R accept<R>(StmtVisitor<R> visitor) {
         return visitor.visitPrintStmt(this);
+    }
+}
+
+final class Return extends Stmt {
+    final Token keyword;
+    final Expr? value;
+
+    const Return({
+        required this.keyword,
+        required this.value,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitReturnStmt(this);
     }
 }
 
