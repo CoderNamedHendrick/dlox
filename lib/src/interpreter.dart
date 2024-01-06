@@ -1,10 +1,8 @@
 import 'package:dlox/dlox.dart';
 import 'package:dlox/src/environment.dart';
 import 'package:dlox/src/errors.dart';
-import 'package:dlox/src/lox_function.dart';
 import 'package:tool/tool.dart';
-
-import 'lox_callable.dart';
+import 'native_functions/native_functions.dart';
 import 'return.dart' as re;
 
 class _BreakOutOfLoopException implements Exception {}
@@ -389,5 +387,5 @@ final class _InterpreterCallable implements LoxCallable {
   }
 
   @override
-  String toString() => '<native fn>';
+  String toString() => '<clock native fn>';
 }

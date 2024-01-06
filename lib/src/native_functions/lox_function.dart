@@ -1,9 +1,10 @@
 import 'package:dlox/src/environment.dart';
 import 'package:dlox/src/interpreter.dart';
-import 'package:dlox/src/lox_callable.dart';
 import 'package:tool/tool.dart';
-import 'return.dart' as re;
+import '../return.dart' as re;
+import 'lox_callable.dart';
 
+/// Native function which calls dart's call interface
 class LoxFunction implements LoxCallable {
   final LFunction _declaration;
 
