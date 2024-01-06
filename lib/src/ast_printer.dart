@@ -203,6 +203,12 @@ final class VisitorAstPrinter
     // TODO: implement visitLFunctionStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitReturnStmt(Return stmt) {
+    // TODO: implement visitReturnStmt
+    throw UnimplementedError();
+  }
 }
 
 final class ReversePolishNotationAstPrinter
@@ -328,6 +334,12 @@ final class ReversePolishNotationAstPrinter
     // TODO: implement visitLFunctionStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitReturnStmt(Return stmt) {
+    // TODO: implement visitReturnStmt
+    throw UnimplementedError();
+  }
 }
 
 final class FunctionalAstPrinter {
@@ -386,6 +398,8 @@ final class FunctionalAstPrinter {
         ),
       // TODO: Handle this case.
       LFunction() => throw UnimplementedError(),
+      // TODO: Handle this case.
+      Return() => throw UnimplementedError(),
     };
   }
 

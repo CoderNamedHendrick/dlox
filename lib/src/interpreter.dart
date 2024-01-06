@@ -237,7 +237,7 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
 
   @override
   void visitLFunctionStmt(LFunction stmt) {
-    LoxFunction function = LoxFunction(stmt);
+    LoxFunction function = LoxFunction(stmt, _environment);
     _environment.define(stmt.name.lexeme, function);
   }
 

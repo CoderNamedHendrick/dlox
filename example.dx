@@ -1,28 +1,14 @@
-// loops with break statement
+fun makeCounter() {
+    var i = 0;
 
-fun sayHi(first, last) {
-    print "Hi, " + first + " " + last + "!";
+    fun count() {
+        i = i + 1;
+        print i;
+    }
+
+    return count;
 }
 
-sayHi("Dear", "Reader");
-
-var a = 10;
-while (a < 100) {
-    if (a == 50) break;
-
-    a = a + 10;
-}
-
-print a;
-
-fun fib(n) {
-    if (n <= 1) return n;
-
-    return fib(n -2 ) + fib(n - 1);
-}
-
-for (var i = 0; i < 20; i = i + 1) {
-    print fib(i);
-}
-
-
+var counter = makeCounter();
+counter();
+counter();
