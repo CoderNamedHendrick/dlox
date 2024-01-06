@@ -11,6 +11,7 @@ class _BreakOutOfLoopException implements Exception {}
 
 final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   final Environment globals = Environment();
+  final Map<Expr, int> locals = {};
 
   late Environment _environment = globals;
 
@@ -60,7 +61,14 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   @override
   visitAssignExpr(Assign expr) {
     dynamic value = _evaluate(expr.value);
-    _environment.assign(expr.name, value);
+
+    int? distance = locals[expr];
+    if (distance != null) {
+      _environment.assignAt(distance, expr.name, value);
+    } else {
+      globals.assign(expr.name, value);
+    }
+
     return value;
   }
 
@@ -267,7 +275,16 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
 
   @override
   visitVariableExpr(Variable expr) {
-    return _environment.get(expr.name);
+    return _lookUpVariable(expr.name, expr);
+  }
+
+  dynamic _lookUpVariable(Token name, Expr expr) {
+    int? distance = locals[expr];
+    if (distance != null) {
+      return _environment.getAt(distance, name.lexeme);
+    } else {
+      return globals.get(name);
+    }
   }
 
   @override
@@ -339,6 +356,10 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
 
   void _execute(Stmt stmt) {
     stmt.accept(this);
+  }
+
+  void resolve(Expr expr, int depth) {
+    locals[expr] = depth;
   }
 
   // var a = 10; while (a < 15) { if (a == 13) break; a = a + 1; print a; } print a;

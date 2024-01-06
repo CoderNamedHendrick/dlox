@@ -35,4 +35,21 @@ class Environment {
   void define(String name, dynamic value) {
     _values.putIfAbsent(name, () => value);
   }
+
+  dynamic getAt(int distance, String name) {
+    return ancestor(distance)._values[name];
+  }
+
+  void assignAt(int distance, Token name, dynamic value) {
+    ancestor(distance)._values[name.lexeme] = value;
+  }
+
+  Environment ancestor(int distance) {
+    Environment environment = this;
+    for (int i = 0; i < distance; i++) {
+      environment = environment.enclosing!;
+    }
+
+    return environment;
+  }
 }

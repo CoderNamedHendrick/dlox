@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dlox/dlox.dart';
 import 'package:dlox/src/errors.dart';
 import 'package:dlox/src/interpreter.dart';
+import 'package:dlox/src/resolver.dart';
 
 import 'parser.dart';
 
@@ -69,6 +70,11 @@ final class Lox {
 
         // Stop if there was a syntax error
         if (_hadError) return;
+        Resolver resolver = Resolver(_interpreter);
+        resolver.resolve(statements);
+
+        // Stop if there was a resolution error.
+        if (_hadError) return;
 
         _interpreter.interpret(statements: statements);
       } on ParseError catch (_) {
@@ -89,6 +95,12 @@ final class Lox {
     final statements = parser.parse();
 
     // Stop if there was a syntax error
+    if (_hadError) return;
+
+    Resolver resolver = Resolver(_interpreter);
+    resolver.resolve(statements);
+
+    // Stop if there was a resolution error
     if (_hadError) return;
 
     _interpreter.interpret(statements: statements);
