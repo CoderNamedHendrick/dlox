@@ -14,6 +14,7 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   late final Interpreter _interpreter;
 
   final Stack<Map<String, bool>> scopes = Stack();
+  final Stack<Map<Token, bool>> variableUsedInScope = Stack();
   _FunctionType _currentFunction = _FunctionType.none;
 
   Resolver(Interpreter interpreter) {
@@ -163,16 +164,29 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
   void _beginScope() {
     scopes.push({});
+    variableUsedInScope.push({});
   }
 
   void _endScope() {
+    for (final varUseInScope in variableUsedInScope.toList()) {
+      for (final MapEntry(key: Token token, value: bool isUsed)
+          in varUseInScope.entries) {
+        if (!isUsed) {
+          Lox.error(token, 'variable declared but never used');
+        }
+      }
+    }
+
     scopes.pop();
+    variableUsedInScope.pop();
   }
 
   void _declare(Token name) {
     if (scopes.isEmpty) return;
+    if (variableUsedInScope.isEmpty) return;
 
     final scope = scopes.top();
+    final variableScope = variableUsedInScope.top();
 
     // check if a variable has been declared already in scope and report error
     // in static time
@@ -181,6 +195,8 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
           name, 'Already declared variable with ${name.lexeme} in this scope.');
     }
 
+    // mark variable as created but not used
+    variableScope.putIfAbsent(name, () => false);
     // mark variable as not ready by binding to false
     scope.putIfAbsent(name.lexeme, () => false);
   }
@@ -193,9 +209,13 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   }
 
   void _resolveLocal(Expr expr, Token name) {
+    final useScopes = variableUsedInScope.toList();
     final varScopes = scopes.toList();
+
     for (int i = scopes.length - 1; i >= 0; i--) {
       if (varScopes[i].containsKey(name.lexeme)) {
+        // mark variable as used in scope.
+        useScopes[i].update(name, (value) => true);
         _interpreter.resolve(expr, scopes.length - 1 - i);
       }
     }
