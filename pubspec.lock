@@ -266,7 +266,7 @@ packages:
     source: hosted
     version: "1.10.0"
   stack:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: stack
       sha256: f5a3032c965b74f394dc6aa138c82373a3403438c68cf5d8e6ef2bc2698949bf

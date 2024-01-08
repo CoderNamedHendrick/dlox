@@ -1,6 +1,8 @@
 import 'package:dlox/dlox.dart';
 import 'package:dlox/src/environment.dart';
 import 'package:dlox/src/errors.dart';
+import 'package:dlox/src/lox_class.dart';
+import 'package:dlox/src/lox_instance.dart';
 import 'package:tool/tool.dart';
 import 'native_functions/native_functions.dart';
 import 'return.dart' as re;
@@ -200,6 +202,34 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   @override
+  visitGetExpr(Get expr) {
+    dynamic object = _evaluate(expr.object);
+    if (object is LoxInstance) {
+      return object.get(expr.name);
+    }
+
+    throw RuntimeError(expr.name, 'Only instances have properties.');
+  }
+
+  @override
+  visitSetExpr(Set expr) {
+    dynamic object = _evaluate(expr.object);
+
+    if (object is! LoxInstance) {
+      throw RuntimeError(expr.name, 'Only instances have fields.');
+    }
+
+    dynamic value = _evaluate(expr.value);
+    object.set(expr.name, value);
+    return value;
+  }
+
+  @override
+  visitThisExpr(This expr) {
+    return _lookUpVariable(expr.keyword, expr);
+  }
+
+  @override
   visitGroupingExpr(Grouping expr) {
     return _evaluate(expr.expression);
   }
@@ -243,7 +273,7 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
 
   @override
   void visitLFunctionStmt(LFunction stmt) {
-    LoxFunction function = LoxFunction(stmt, _environment);
+    LoxFunction function = LoxFunction(stmt, _environment, false);
     _environment.define(stmt.name.lexeme, function);
   }
 
@@ -288,6 +318,20 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   @override
   void visitBlockStmt(Block stmt) {
     executeBlock(stmt.statements, Environment(enclosing: _environment));
+  }
+
+  @override
+  void visitClassStmt(Class stmt) {
+    _environment.define(stmt.name.lexeme, null);
+    Map<String, LoxFunction> methods = {};
+    for (LFunction method in stmt.methods) {
+      LoxFunction function =
+          LoxFunction(method, _environment, method.name.lexeme == 'init');
+      methods.putIfAbsent(method.name.lexeme, () => function);
+    }
+
+    LoxClass klass = LoxClass(stmt.name.lexeme, methods);
+    _environment.assign(stmt.name, klass);
   }
 
   @override

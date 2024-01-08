@@ -1,5 +1,6 @@
 import 'package:dlox/src/environment.dart';
 import 'package:dlox/src/interpreter.dart';
+import 'package:dlox/src/lox_instance.dart';
 import 'package:tool/tool.dart';
 import '../return.dart' as re;
 import 'lox_callable.dart';
@@ -11,7 +12,16 @@ class LoxFunction implements LoxCallable {
   // save state of the environment during function declaration
   final Environment _closure;
 
-  LoxFunction(this._declaration, this._closure);
+  // isConstructor initializer
+  final bool _isInitializer;
+
+  LoxFunction(this._declaration, this._closure, this._isInitializer);
+
+  LoxFunction bind(LoxInstance instance) {
+    Environment environment = Environment(enclosing: _closure);
+    environment.define('this', instance);
+    return LoxFunction(_declaration, environment, _isInitializer);
+  }
 
   @override
   int get arity => _declaration.params.length;
@@ -27,8 +37,12 @@ class LoxFunction implements LoxCallable {
     try {
       interpreter.executeBlock(_declaration.body, environment);
     } on re.Return catch (returnValue) {
+      if (_isInitializer) return _closure.getAt(0, 'this');
+
       return returnValue.value;
     }
+
+    if (_isInitializer) return _closure.getAt(0, 'this');
     return null;
   }
 

@@ -1,23 +1,10 @@
-fun addition(a , b) {
-    return a + b;
+class Cake {
+    taste() {
+        var adjective = "delicious";
+        print "The " + this.flavor + " cake is " + adjective + "!";
+    }
 }
 
-fun subtraction(a, b) {
-    return a - b;
-}
-
-fun division(a, b) {
-    return a / b;
-}
-
-fun multiplication(a, b) {
-    return a * b;
-}
-
-
-var a = 10; var b = 5;
-
-print addition(a, b);
-print subtraction(a, b);
-print division(a, b);
-print multiplication(a, b);
+var cake = Cake();
+cake.flavor = "German chocolate";
+cake.taste();

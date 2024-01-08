@@ -14,10 +14,10 @@ executables:
 # Add regular dependencies here.
 dependencies:
   args: ^2.4.2
+  stack: ^0.2.2
   tool:
     path: tool
 
 dev_dependencies:
   lints: ^3.0.0
   test: ^1.25.0
-  stack: ^0.2.2

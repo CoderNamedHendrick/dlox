@@ -38,6 +38,7 @@ class Parser {
 
   Stmt? _declaration() {
     try {
+      if (_match([TokenType.CLASS])) return _classDeclaration();
       if (_match([TokenType.FUN])) return _function('function');
       if (_match([TokenType.VAR])) return _varDeclaration();
 
@@ -47,6 +48,20 @@ class Parser {
       if (Lox.isReplRun) rethrow;
       return null;
     }
+  }
+
+  Stmt _classDeclaration() {
+    Token name = _consume(TokenType.IDENTIFIER, 'Expect class name.');
+    _consume(TokenType.LEFT_BRACE, 'Expects \'{\' before class body.');
+
+    List<LFunction> methods = [];
+    while (!_check(TokenType.RIGHT_BRACE) && !_isAtEnd) {
+      methods.add(_function('method'));
+    }
+
+    _consume(TokenType.RIGHT_BRACE, 'Expect \'}\' after class body.');
+
+    return Class(name: name, methods: methods);
   }
 
   Stmt _statement() {
@@ -177,7 +192,7 @@ class Parser {
     return Expression(expression: expr);
   }
 
-  Stmt _function(String kind) {
+  LFunction _function(String kind) {
     Token name = _consume(TokenType.IDENTIFIER, 'Expect $kind name.');
     _consume(TokenType.LEFT_PAREN, 'Expect \'(\' after $kind name.');
     List<Token> parameters = [];
@@ -226,6 +241,9 @@ class Parser {
       if (expr is Variable) {
         Token name = expr.name;
         return Assign(name: name, value: value);
+      } else if (expr is Get) {
+        Get get = expr;
+        return Set(object: get.object, name: get.name, value: value);
       }
 
       _error(equals, 'Invalid assignment target.');
@@ -327,6 +345,10 @@ class Parser {
     while (true) {
       if (_match([TokenType.LEFT_PAREN])) {
         expr = _finishCall(expr);
+      } else if (_match([TokenType.DOT])) {
+        Token name =
+            _consume(TokenType.IDENTIFIER, 'Expect property name after \'.\'.');
+        expr = Get(object: expr, name: name);
       } else {
         break;
       }
@@ -360,6 +382,8 @@ class Parser {
     if (_match([TokenType.NUMBER, TokenType.STRING])) {
       return Literal(value: _previous.literal);
     }
+
+    if (_match([TokenType.THIS])) return This(keyword: _previous);
 
     if (_match([TokenType.IDENTIFIER])) {
       return Variable(name: _previous);

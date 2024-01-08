@@ -14,6 +14,9 @@ final class GenerateAst {
         'Assign    :    Token name, Expr value',
         'Binary    :    Expr left, Token operator, Expr right',
         'Call      :    Expr callee, Token paren, List<Expr> arguments',
+        'Get       :    Expr object, Token name',
+        'Set       :    Expr object, Token name, Expr value',
+        'This      :    Token keyword',
         'Grouping  :    Expr expression',
         'Literal   :    dynamic value',
         'Logical   :    Expr left, Token operator, Expr right',
@@ -23,6 +26,7 @@ final class GenerateAst {
 
       _defineAst(outputDir, baseName: 'Stmt', types: [
         'Block      : List<Stmt> statements',
+        'Class      : Token name, List<LFunction> methods',
         'Expression : Expr expression',
         'LFunction   : Token name, List<Token> params, List<Stmt> body',
         'If         : Expr condition, Stmt thenBranch, Stmt? elseBranch',

@@ -4,6 +4,9 @@ abstract interface class ExprVisitor<R> {
     R visitAssignExpr (Assign expr);
     R visitBinaryExpr (Binary expr);
     R visitCallExpr (Call expr);
+    R visitGetExpr (Get expr);
+    R visitSetExpr (Set expr);
+    R visitThisExpr (This expr);
     R visitGroupingExpr (Grouping expr);
     R visitLiteralExpr (Literal expr);
     R visitLogicalExpr (Logical expr);
@@ -63,6 +66,51 @@ final class Call extends Expr {
     @override
     R accept<R>(ExprVisitor<R> visitor) {
         return visitor.visitCallExpr(this);
+    }
+}
+
+final class Get extends Expr {
+    final Expr object;
+    final Token name;
+
+    const Get({
+        required this.object,
+        required this.name,
+    });
+
+    @override
+    R accept<R>(ExprVisitor<R> visitor) {
+        return visitor.visitGetExpr(this);
+    }
+}
+
+final class Set extends Expr {
+    final Expr object;
+    final Token name;
+    final Expr value;
+
+    const Set({
+        required this.object,
+        required this.name,
+        required this.value,
+    });
+
+    @override
+    R accept<R>(ExprVisitor<R> visitor) {
+        return visitor.visitSetExpr(this);
+    }
+}
+
+final class This extends Expr {
+    final Token keyword;
+
+    const This({
+        required this.keyword,
+    });
+
+    @override
+    R accept<R>(ExprVisitor<R> visitor) {
+        return visitor.visitThisExpr(this);
     }
 }
 

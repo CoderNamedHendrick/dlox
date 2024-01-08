@@ -7,7 +7,14 @@ import '../dlox.dart';
 enum _FunctionType {
   none,
   function,
+  initializer,
+  method,
   loop;
+}
+
+enum _ClassType {
+  none,
+  klass;
 }
 
 class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
@@ -16,6 +23,7 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   final Stack<Map<String, bool>> scopes = Stack();
   final Stack<Map<Token, bool>> variableUsedInScope = Stack();
   _FunctionType _currentFunction = _FunctionType.none;
+  _ClassType _currentClass = _ClassType.none;
 
   Resolver(Interpreter interpreter) {
     _interpreter = interpreter;
@@ -41,11 +49,36 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   }
 
   @override
+  void visitClassStmt(Class stmt) {
+    _ClassType enclosingClass = _currentClass;
+    _currentClass = _ClassType.klass;
+
+    _declare(stmt.name);
+    _define(stmt.name);
+
+    _beginScope();
+    scopes.top().putIfAbsent('this', () => true);
+
+    for (LFunction method in stmt.methods) {
+      _FunctionType declaration = _FunctionType.method;
+      if (method.name.lexeme == 'init') {
+        declaration = _FunctionType.initializer;
+      }
+
+      _resolveFunction(method, declaration);
+    }
+
+    _endScope();
+
+    _currentClass = enclosingClass;
+  }
+
+  @override
   void visitBreakStmt(Break stmt) {
     // handle using break in static analysis
     if (_currentFunction == _FunctionType.loop) return;
 
-    Lox.error(stmt.token, 'Can\'t break outside a loop');
+    Lox.error(stmt.token, 'Can\'t use \'break\' outside a loop');
   }
 
   @override
@@ -55,6 +88,26 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     for (Expr argument in expr.arguments) {
       _resolveExpr(argument);
     }
+  }
+
+  @override
+  void visitGetExpr(Get expr) {
+    _resolveExpr(expr.object);
+  }
+
+  @override
+  void visitSetExpr(Set expr) {
+    _resolveExpr(expr.value);
+    _resolveExpr(expr.object);
+  }
+
+  @override
+  void visitThisExpr(This expr) {
+    if (_currentClass == _ClassType.none) {
+      Lox.error(expr.keyword, 'Can\'t use \'this\' outside of a class.');
+      return;
+    }
+    _resolveLocal(expr, expr.keyword);
   }
 
   @override
@@ -102,7 +155,13 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
       Lox.error(stmt.keyword, 'Can\'t return from top-level code.');
     }
 
-    if (stmt.value != null) _resolveExpr(stmt.value!);
+    if (stmt.value != null) {
+      if (_currentFunction == _FunctionType.initializer) {
+        Lox.error(stmt.keyword, 'Can\'t return a value from an initializer.');
+      }
+
+      _resolveExpr(stmt.value!);
+    }
   }
 
   @override
@@ -214,8 +273,11 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
     for (int i = scopes.length - 1; i >= 0; i--) {
       if (varScopes[i].containsKey(name.lexeme)) {
-        // mark variable as used in scope.
-        useScopes[i].update(name, (value) => true);
+        // no need to set use to true for resolving this expressions
+        if (expr is! This) {
+          // mark variable as used in scope.
+          useScopes[i].update(name, (value) => true);
+        }
         _interpreter.resolve(expr, scopes.length - 1 - i);
       }
     }

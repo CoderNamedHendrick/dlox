@@ -209,6 +209,30 @@ final class VisitorAstPrinter
     // TODO: implement visitReturnStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitClassStmt(Class stmt) {
+    // TODO: implement visitClassStmt
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitGetExpr(Get expr) {
+    // TODO: implement visitGetExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitSetExpr(Set expr) {
+    // TODO: implement visitSetExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitThisExpr(This expr) {
+    // TODO: implement visitThisExpr
+    throw UnimplementedError();
+  }
 }
 
 final class ReversePolishNotationAstPrinter
@@ -340,6 +364,30 @@ final class ReversePolishNotationAstPrinter
     // TODO: implement visitReturnStmt
     throw UnimplementedError();
   }
+
+  @override
+  String visitClassStmt(Class stmt) {
+    // TODO: implement visitClassStmt
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitGetExpr(Get expr) {
+    // TODO: implement visitGetExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitSetExpr(Set expr) {
+    // TODO: implement visitSetExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitThisExpr(This expr) {
+    // TODO: implement visitThisExpr
+    throw UnimplementedError();
+  }
 }
 
 final class FunctionalAstPrinter {
@@ -371,6 +419,12 @@ final class FunctionalAstPrinter {
       Variable() => _parenthesize('var', [expr]),
       // TODO: Handle this case.
       Call() => throw UnimplementedError(),
+      // TODO: Handle this case.
+      Get() => throw UnimplementedError(),
+      // TODO: Handle this case.
+      Set() => throw UnimplementedError(),
+      // TODO: Handle this case.
+      This() => throw UnimplementedError(),
     };
   }
 
@@ -400,6 +454,8 @@ final class FunctionalAstPrinter {
       LFunction() => throw UnimplementedError(),
       // TODO: Handle this case.
       Return() => throw UnimplementedError(),
+      // TODO: Handle this case.
+      Class() => throw UnimplementedError(),
     };
   }
 

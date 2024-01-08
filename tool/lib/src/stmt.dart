@@ -2,6 +2,7 @@ import 'src.dart';
 
 abstract interface class StmtVisitor<R> {
     R visitBlockStmt (Block stmt);
+    R visitClassStmt (Class stmt);
     R visitExpressionStmt (Expression stmt);
     R visitLFunctionStmt (LFunction stmt);
     R visitIfStmt (If stmt);
@@ -28,6 +29,21 @@ final class Block extends Stmt {
     @override
     R accept<R>(StmtVisitor<R> visitor) {
         return visitor.visitBlockStmt(this);
+    }
+}
+
+final class Class extends Stmt {
+    final Token name;
+    final List<LFunction> methods;
+
+    const Class({
+        required this.name,
+        required this.methods,
+    });
+
+    @override
+    R accept<R>(StmtVisitor<R> visitor) {
+        return visitor.visitClassStmt(this);
     }
 }
 
