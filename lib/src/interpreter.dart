@@ -243,7 +243,7 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
           expr.method, 'Undefined property \'${expr.method.lexeme}.');
     }
 
-    return method?.bind(object);
+    return method.bind(object);
   }
 
   @override

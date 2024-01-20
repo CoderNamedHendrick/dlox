@@ -1,6 +1,6 @@
 name: dlox
 description: A simple interpreted language with dart as its IR
-version: 0.0.3
+version: 0.0.4
 publish_to: none
 # repository: https://github.com/my_org/my_repo
 
@@ -20,4 +20,4 @@ dependencies:
 
 dev_dependencies:
   lints: ^3.0.0
-  test: ^1.25.0
+  test: ^1.25.1
