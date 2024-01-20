@@ -34,10 +34,12 @@ final class Block extends Stmt {
 
 final class Class extends Stmt {
     final Token name;
+    final Variable? superclass;
     final List<LFunction> methods;
 
     const Class({
         required this.name,
+        required this.superclass,
         required this.methods,
     });
 

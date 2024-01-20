@@ -225,6 +225,28 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
   }
 
   @override
+  visitSuperExpr(Super expr) {
+    int? distance = locals[expr];
+    if (distance == null) {
+      throw RuntimeError(expr.keyword, 'No \'super\' class found');
+    }
+
+    LoxClass superclass = _environment.getAt(distance, 'super');
+
+    // "this" instance is always a step behind environment containing the super class.
+    LoxInstance object = _environment.getAt(distance - 1, 'this');
+
+    LoxFunction? method = superclass.findMethod(expr.method.lexeme);
+
+    if (method == null) {
+      throw RuntimeError(
+          expr.method, 'Undefined property \'${expr.method.lexeme}.');
+    }
+
+    return method?.bind(object);
+  }
+
+  @override
   visitThisExpr(This expr) {
     return _lookUpVariable(expr.keyword, expr);
   }
@@ -322,7 +344,22 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
 
   @override
   void visitClassStmt(Class stmt) {
+    dynamic superclass;
+    if (stmt.superclass != null) {
+      superclass = _evaluate(stmt.superclass!);
+      if (superclass is! LoxClass) {
+        throw RuntimeError(
+            stmt.superclass!.name, 'Superclass must be a class.');
+      }
+    }
+
     _environment.define(stmt.name.lexeme, null);
+
+    if (stmt.superclass != null) {
+      _environment = Environment(enclosing: _environment);
+      _environment.define('super', superclass);
+    }
+
     Map<String, LoxFunction> methods = {};
     for (LFunction method in stmt.methods) {
       LoxFunction function =
@@ -330,7 +367,13 @@ final class Interpreter implements ExprVisitor<dynamic>, StmtVisitor<void> {
       methods.putIfAbsent(method.name.lexeme, () => function);
     }
 
-    LoxClass klass = LoxClass(stmt.name.lexeme, methods);
+    LoxClass klass =
+        LoxClass(stmt.name.lexeme, superclass as LoxClass?, methods);
+
+    if (superclass != null) {
+      _environment = _environment.enclosing!;
+    }
+
     _environment.assign(stmt.name, klass);
   }
 

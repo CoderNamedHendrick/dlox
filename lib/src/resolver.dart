@@ -14,7 +14,8 @@ enum _FunctionType {
 
 enum _ClassType {
   none,
-  klass;
+  klass,
+  subclass;
 }
 
 class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
@@ -22,6 +23,7 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
   final Stack<Map<String, bool>> scopes = Stack();
   final Stack<Map<Token, bool>> variableUsedInScope = Stack();
+  final useScopeIgnore = {This, Super};
   _FunctionType _currentFunction = _FunctionType.none;
   _ClassType _currentClass = _ClassType.none;
 
@@ -56,6 +58,21 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     _declare(stmt.name);
     _define(stmt.name);
 
+    if (stmt.superclass != null &&
+        stmt.name.lexeme == stmt.superclass!.name.lexeme) {
+      Lox.error(stmt.superclass!.name, 'A class can\'t inherit from itself.');
+    }
+
+    if (stmt.superclass != null) {
+      _currentClass = _ClassType.subclass;
+      _resolveExpr(stmt.superclass!);
+    }
+
+    if (stmt.superclass != null) {
+      _beginScope();
+      scopes.top().putIfAbsent('super', () => true);
+    }
+
     _beginScope();
     scopes.top().putIfAbsent('this', () => true);
 
@@ -69,6 +86,8 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     }
 
     _endScope();
+
+    if (stmt.superclass != null) _endScope();
 
     _currentClass = enclosingClass;
   }
@@ -99,6 +118,18 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   void visitSetExpr(Set expr) {
     _resolveExpr(expr.value);
     _resolveExpr(expr.object);
+  }
+
+  @override
+  void visitSuperExpr(Super expr) {
+    if (_currentClass == _ClassType.none) {
+      Lox.error(expr.keyword, 'Can\'t use \'super\' outside of a class.');
+    } else if (_currentClass != _ClassType.subclass) {
+      Lox.error(
+          expr.keyword, 'Can\'t use \'super\' in a class with no superclass.');
+    }
+
+    _resolveLocal(expr, expr.keyword);
   }
 
   @override
@@ -274,7 +305,7 @@ class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     for (int i = scopes.length - 1; i >= 0; i--) {
       if (varScopes[i].containsKey(name.lexeme)) {
         // no need to set use to true for resolving this expressions
-        if (expr is! This) {
+        if (!useScopeIgnore.contains(expr.runtimeType)) {
           // mark variable as used in scope.
           useScopes[i].update(name, (value) => true);
         }

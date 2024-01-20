@@ -233,6 +233,12 @@ final class VisitorAstPrinter
     // TODO: implement visitThisExpr
     throw UnimplementedError();
   }
+
+  @override
+  String visitSuperExpr(Super expr) {
+    // TODO: implement visitSuperExpr
+    throw UnimplementedError();
+  }
 }
 
 final class ReversePolishNotationAstPrinter
@@ -388,6 +394,12 @@ final class ReversePolishNotationAstPrinter
     // TODO: implement visitThisExpr
     throw UnimplementedError();
   }
+
+  @override
+  String visitSuperExpr(Super expr) {
+    // TODO: implement visitSuperExpr
+    throw UnimplementedError();
+  }
 }
 
 final class FunctionalAstPrinter {
@@ -425,6 +437,7 @@ final class FunctionalAstPrinter {
       Set() => throw UnimplementedError(),
       // TODO: Handle this case.
       This() => throw UnimplementedError(),
+      Super() => throw UnimplementedError(),
     };
   }
 

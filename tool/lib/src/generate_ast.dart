@@ -16,6 +16,7 @@ final class GenerateAst {
         'Call      :    Expr callee, Token paren, List<Expr> arguments',
         'Get       :    Expr object, Token name',
         'Set       :    Expr object, Token name, Expr value',
+        'Super     :    Token keyword, Token method',
         'This      :    Token keyword',
         'Grouping  :    Expr expression',
         'Literal   :    dynamic value',
@@ -26,7 +27,7 @@ final class GenerateAst {
 
       _defineAst(outputDir, baseName: 'Stmt', types: [
         'Block      : List<Stmt> statements',
-        'Class      : Token name, List<LFunction> methods',
+        'Class      : Token name, Variable? superclass, List<LFunction> methods',
         'Expression : Expr expression',
         'LFunction   : Token name, List<Token> params, List<Stmt> body',
         'If         : Expr condition, Stmt thenBranch, Stmt? elseBranch',

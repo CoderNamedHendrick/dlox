@@ -4,13 +4,18 @@ import 'package:dlox/src/native_functions/native_functions.dart';
 
 class LoxClass implements LoxCallable {
   final String name;
+  final LoxClass? superclass;
   final Map<String, LoxFunction> _methods;
 
-  const LoxClass(this.name, this._methods);
+  const LoxClass(this.name, this.superclass, this._methods);
 
   LoxFunction? findMethod(String name) {
     if (_methods.containsKey(name)) {
       return _methods[name];
+    }
+
+    if (superclass != null) {
+      return superclass?.findMethod(name);
     }
 
     return null;
